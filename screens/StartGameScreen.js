@@ -1,5 +1,16 @@
-import React, { useState } from 'react';
-import { View , Text, StyleSheet, Button, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { 
+    View ,
+    Text, 
+    StyleSheet, 
+    Button, 
+    TouchableWithoutFeedback, 
+    Keyboard, 
+    Alert, 
+    Dimensions, 
+    ScrollView,
+    KeyboardAvoidingView 
+} from 'react-native';
 
 import Card from '../components/Card';
 import colors from '../constants/colors';
@@ -12,7 +23,8 @@ const StartGameScreen = props => {
     const [enteredValue, setEnteredValue] = useState('');
     const [confirmed, setConfirmed ] = useState(false);
     const [selectedNumber, setSelectedNumber] = useState();
-    
+    const [buttonWidth, setButtonWidth] = useState(Dimensions.get('window').width / 4);
+
     const numberHandler = inputText => {
         setEnteredValue(inputText.replace(/[^0-9]/g, ''));
     };
@@ -21,6 +33,17 @@ const StartGameScreen = props => {
         setEnteredValue("");
         setConfirmed(false);
     }
+
+    useEffect(() => {
+        const updateLayout = () =>{
+            setButtonWidth(Dimensions.get('window').width / 4);
+        };
+        
+        Dimensions.addEventListener('change', updateLayout);
+        return () => {
+            Dimensions.addEventListener('change', updateLayout);
+        };
+    });
 
     const confirmInputHandler = () => {
         let chosenNumber = parseInt(enteredValue);
@@ -50,11 +73,14 @@ const StartGameScreen = props => {
     }
 
     return (
+        <ScrollView>
+        <KeyboardAvoidingView behavior='padding' keyboardVerticalOffset={30} >
         <View style = {styles.screen} >
             <Text style = {styles.title} >The Start Game Screen</Text> 
             <Card style ={styles.inputContainer} >
                 <Text>Select a Number</Text>
-                <Input style = {styles.input} 
+                <Input 
+                    style = {styles.input} 
                     blurOnSubmit 
                     autoCapitalize = 'none' 
                     autoCorrect ={false} 
@@ -64,16 +90,22 @@ const StartGameScreen = props => {
                     value = {enteredValue}
                 />
                 <View style = {styles.buttonContainer} >
-                    <View style = {styles.button} >
-                        <Button title = 'reset' onPress={resetInputHandler} color = {colors.accent} />
+                    <View style={{width: buttonWidth}}>
+                        <Button 
+                            title = 'reset' 
+                            onPress={resetInputHandler} 
+                            color = {colors.accent} 
+                        />
                     </View>
-                    <View style = {styles.button} >
+                    <View style={{width: buttonWidth}}>
                         <Button title = 'confirm' onPress={confirmInputHandler} color = {colors.primary} />
                     </View>
                 </View>
             </Card>
             {confirmedOutput}
         </View>
+        </KeyboardAvoidingView>
+        </ScrollView>
     );
 };
 
@@ -88,8 +120,11 @@ const styles = StyleSheet.create({
         marginVertical: 10
     },
     inputContainer : {
-        width : 300,
-        maxWidth : '80%',
+        // width : 300,
+        width : '80%',      // set to make responsive design
+        minWidth : 300 ,
+        maxWidth : '95%',
+        // maxWidth : '80%',
         alignItems: 'center',
         
     },
@@ -111,8 +146,9 @@ const styles = StyleSheet.create({
         paddingHorizontal : '15'
     }, 
 
-    button : {
-        width : 100
-    }
+    // button : {
+    //     // width : 100
+    //     width: Dimensions.get('window').width / 4 // we can get "window width" of device to make responsive for all device
+    // }
 });
 export default StartGameScreen;

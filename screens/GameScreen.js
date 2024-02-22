@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {View, StyleSheet, Button, Alert, Text, ScrollView} from 'react-native';
+import {View, StyleSheet, Button, Alert, Text, ScrollView, Dimensions } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 
 import NumberContainer from '../components/NumberContainer';
@@ -30,16 +30,33 @@ const GameScreen = props => {
     //const [ currentGuess, setCurrent ] = useState(generateRandomBetween(1,100,props.userChoice));
     //const [round, setRound] = useState(0);
     const [pastGuess, setPastGuess] = useState([intialGuess]);  // added guesses
+    const [availableDeviceWidth, setAvailableDeviceWidth] = useState(
+        Dimensions.get('window').width
+    );
+    const [availableDeviceHeight, setAvailableDeviceHeights] = useState(
+        Dimensions.get('window').height
+    );
     const currentLow = useRef(1);
     const currentHigh = useRef(100);
 
     const { userChoice, onGameOver } = props;
 
-        useEffect(() => {
-            if(currentGuess === userChoice){
-                onGameOver(pastGuess.length);
-            }
-        }, [currentGuess, userChoice, onGameOver]);
+    useEffect(() => {
+        const updateLayout= () =>{
+            setAvailableDeviceWidth(Dimensions.get('window').width)
+            setAvailableDeviceHeights(Dimensions.get('window').height)
+        };
+        Dimensions.addEventListener('change', updateLayout);
+        return () => {
+            Dimensions.addEventListener('change', updateLayout);
+        };
+    });
+    
+    useEffect(() => {
+        if(currentGuess === userChoice){
+            onGameOver(pastGuess.length);
+        }
+    }, [currentGuess, userChoice, onGameOver]);
 
     const nextGuessHandler = direction => {
         if(
@@ -48,7 +65,8 @@ const GameScreen = props => {
             Alert.alert(
                 'Don\'t lie!',
                 'You know that this is wrong ...',
-                [{text: 'sorry', style : 'cancel'}]);
+                [{text: 'sorry', style : 'cancel'}
+            ]);
         return;
         }
         if(direction === 'lower'){
@@ -63,6 +81,32 @@ const GameScreen = props => {
 
     };
 
+    let listContainerStyle = styles.listContainer;
+
+    if(availableDeviceWidth < 350){
+        listContainerStyle = styles.listContainerBig;
+    }
+
+    if(availableDeviceHeight < 500){
+        return(
+            <View style= {styles.screen} >
+                <Text>Opponent's Guess</Text>
+                
+                <View style = {styles.controls}>
+                    <MainButton onPress={(nextGuessHandler.bind(this, 'lower'))} >
+                        <AntDesign name="minus" size={24} color="white" />
+                    </MainButton>
+                    <NumberContainer>{currentGuess}</NumberContainer>
+                    <MainButton onPress={(nextGuessHandler.bind(this, 'graeter'))} >
+                        <AntDesign name="plus" size={24} color="white" />
+                    </MainButton>
+                </View>
+                <View style={styles.listContainer} >
+                    <ScrollView contentContainerStyle={styles.list}>{pastGuess.map((guess, index )=> randerList(guess, pastGuess.length - index))}</ScrollView> 
+                </View>
+            </View>
+        );    
+    }
 
     return(
         <View style= {styles.screen} >
@@ -89,6 +133,12 @@ const styles = StyleSheet.create({
         padding : 10,
         alignItems : 'center'
     },
+    controls : {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems : 'center',
+        width : '80%'
+    },
     listItems: {
         borderColor: '#ccc',
         borderWidth: 1,
@@ -101,7 +151,12 @@ const styles = StyleSheet.create({
     },
     listContainer:{
         flex : 1,
-        width: '80%'
+        width: '60%'
+        // width: Dimensions.get('window').width < 200 ? '60%' : '80%'
+    },
+    listContainerBig : {
+        flex: 1,
+        width : '80%'
     },
     list : {
         flexGrow: 1,
@@ -112,7 +167,8 @@ const styles = StyleSheet.create({
     buttonContainer : {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 20,
+        // marginTop: 20,
+        marginTop: Dimensions.get('window').height > 600 ? 20 : 5,
         width : 300,
         maxWidth : '80%'
     }
